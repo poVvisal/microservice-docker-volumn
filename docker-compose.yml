@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: sports_mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+    networks:
+      - sports_network
+
+  player-service:
+    build: ./Player_Microservice
+    container_name: player_microservice
+    restart: always
+    ports:
+      - "5003:5003"
+    environment:
+      - MONGODB_HOST=mongodb
+      - MONGODB_PORT=27017
+      - MONGODB_DATABASE=sportsmanagement
+    depends_on:
+      - mongodb
+    networks:
+      - sports_network
+
+  coach-service:
+    build: ./Coach_Microservice
+    container_name: coach_microservice
+    restart: always
+    ports:
+      - "5002:5002"
+    environment:
+      - MONGODB_HOST=mongodb
+      - MONGODB_PORT=27017
+      - MONGODB_DATABASE=sportsmanagement
+    depends_on:
+      - mongodb
+    networks:
+      - sports_network
+
+volumes:
+  mongodb_data:
+
+networks:
+  sports_network:
+    driver: bridge
